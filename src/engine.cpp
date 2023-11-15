@@ -43,9 +43,12 @@ double evaluate(Board* b, PlayerColor clr) {
         else if (piece_type & BISHOP) black_score += 7.0;
         else if (piece_type & KNIGHT) black_score += 5.0;
     }
+    // can add piece adjustment values
     if (clr == WHITE) return (white_score - black_score);
     else return (black_score - white_score);
 }
+
+// can add endgame tablebases using some techniques
 
 void Engine::find_best_move(const Board& b) {
 
