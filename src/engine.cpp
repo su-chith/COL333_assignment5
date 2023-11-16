@@ -49,13 +49,7 @@ double evaluate(Board b, PlayerColor clr) {
 }
 
 // can add endgame tablebases using some techniques
-
-Board* copy(Board* b) {
-    Board* c = new Board();
-    memcpy(&(c->data), &(b->data), sizeof(BoardData));
-    return c;
-}
-
+// https://www.chessprogramming.org/Endgame_Tablebases
 
 // minimax with alpha beta pruning
 double alpha_beta(Board b, int depth, bool maximise, double alpha, double beta, PlayerColor clr) {
