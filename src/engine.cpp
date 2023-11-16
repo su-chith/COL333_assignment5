@@ -190,7 +190,10 @@ void Engine::find_best_move(const Board& b) {
         double alpha = -10000.0;
         double beta = 10000.0;
         std::unordered_set<U16> best_moves;
+        time_t start = time(0);
         for (auto m : moveset) {
+            time_t end = time(0);
+            if (end - start > 1.5) break;
             Board newboard(b);
             newboard.do_move_(m);
             double score = alpha_beta(newboard, 0, true, alpha, beta, clr);
@@ -204,7 +207,10 @@ void Engine::find_best_move(const Board& b) {
             double best_score2 = -10000.0;
             double alpha2 = -10000.0;
             double beta2 = 10000.0;
+            time_t start2 = time(0);
             for (auto m : best_moves) {
+                time_t end2 = time(0);
+                if (end2 - start2 > 0.5) break;
                 Board newboard(b);
                 newboard.do_move_(m);
                 double score = alpha_beta2(newboard, 0, true, alpha2, beta2, clr, m);
@@ -217,5 +223,5 @@ void Engine::find_best_move(const Board& b) {
     }
 
     // just for debugging, to slow down the moves
-    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+    // std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 }
