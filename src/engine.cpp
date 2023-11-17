@@ -22,26 +22,49 @@ double evaluate(Board b, PlayerColor clr) {
     }
     // need to write loops to evaluate score based on board structure
     // evaluations for white and black
+
     for (int i = 0; i < b.data.n_pieces; i++) {
         U8 piece = pieces[i];
         if (piece == DEAD) continue;
+        bool threat = b.under_threat(piece);
         U8 piece_type = b.data.board_0[piece];
-        if (piece_type & PAWN) white_score += 1.0;
-        else if (piece_type & ROOK) white_score += 14.0;
-        else if (piece_type & KING) white_score += 40.0;
-        else if (piece_type & BISHOP) white_score += 7.0;
-        else if (piece_type & KNIGHT) white_score += 5.0;
+        if (piece_type & PAWN) {
+            white_score += 2.0;
+            if (threat) white_score -= 2.0;
+        } else if (piece_type & ROOK) {
+            white_score += 10.5;
+            if (threat) white_score -= 13.0;
+        } else if (piece_type & KING) white_score += 0.1;
+        else if (piece_type & BISHOP) {
+            white_score += 7.0;
+            if (threat) white_score -= 8.0;
+        } 
+        else if (piece_type & KNIGHT) {
+            white_score += 7.0;
+            if (threat) white_score -= 8.0;
+        }
     }
     int s = 10;
     for (int i = 0; i < b.data.n_pieces; i++) {
         U8 piece = pieces[i+s];
         if (piece == DEAD) continue;
+        bool threat = b.under_threat(piece);
         U8 piece_type = b.data.board_0[piece];
-        if (piece_type & PAWN) black_score += 1.0;
-        else if (piece_type & ROOK) black_score += 14.0;
-        else if (piece_type & KING) black_score += 40.0;
-        else if (piece_type & BISHOP) black_score += 7.0;
-        else if (piece_type & KNIGHT) black_score += 5.0;
+        if (piece_type & PAWN) {
+            black_score += 2.0;
+            if (threat) black_score -= 2.0;
+        } else if (piece_type & ROOK) {
+            black_score += 10.5;
+            if (threat) black_score -= 13.0;
+        } else if (piece_type & KING) black_score += 0.1;
+        else if (piece_type & BISHOP) {
+            black_score += 7.0;
+            if (threat) black_score -= 8.0;
+        } 
+        else if (piece_type & KNIGHT) {
+            black_score += 7.0;
+            if (threat) black_score -= 8.0;
+        }
     }
     // can add piece adjustment values
     if (clr == WHITE) return (white_score - black_score);
@@ -115,26 +138,32 @@ double evaluate_2(Board b, PlayerColor clr, U8 move) {
         else black_score += 5.0;
     }
 
+    // evaluation for mobility
+    auto moveset = b.get_legal_moves();
+    if (b.data.player_to_play == WHITE) white_score += moveset.size() * 0.1;
+    else black_score += moveset.size() * 0.1;
+    
+
     for (int i = 0; i < b.data.n_pieces; i++) {
         U8 piece = pieces[i];
         if (piece == DEAD) continue;
         U8 piece_type = b.data.board_0[piece];
-        if (piece_type & PAWN) white_score += 3.0;
-        else if (piece_type & ROOK) white_score += 8.0;
+        if (piece_type & PAWN) white_score += 2.0;
+        else if (piece_type & ROOK) white_score += 10.5;
         else if (piece_type & KING) white_score += 0.1;
-        else if (piece_type & BISHOP) white_score += 10.0;
-        else if (piece_type & KNIGHT) white_score += 12.0;
+        else if (piece_type & BISHOP) white_score += 7.0;
+        else if (piece_type & KNIGHT) white_score += 7.0;
     }
     int s = 10;
     for (int i = 0; i < b.data.n_pieces; i++) {
         U8 piece = pieces[i+s];
         if (piece == DEAD) continue;
         U8 piece_type = b.data.board_0[piece];
-        if (piece_type & PAWN) black_score += 3.0;
-        else if (piece_type & ROOK) black_score += 8.0;
+        if (piece_type & PAWN) black_score += 2.0;
+        else if (piece_type & ROOK) black_score += 10.5;
         else if (piece_type & KING) black_score += 0.1;
-        else if (piece_type & BISHOP) black_score += 10.0;
-        else if (piece_type & KNIGHT) black_score += 12.0;
+        else if (piece_type & BISHOP) black_score += 7.0;
+        else if (piece_type & KNIGHT) black_score += 7.0;
     }
     // can add piece adjustment values
     if (clr == WHITE) return (white_score - black_score);
@@ -189,7 +218,6 @@ void Engine::find_best_move(const Board& b) {
         double best_score = -10000.0;
         double alpha = -10000.0;
         double beta = 10000.0;
-        std::unordered_set<U16> best_moves;
         time_t start = time(0);
         for (auto m : moveset) {
             time_t end = time(0);
@@ -197,27 +225,9 @@ void Engine::find_best_move(const Board& b) {
             Board newboard(b);
             newboard.do_move_(m);
             double score = alpha_beta(newboard, 0, true, alpha, beta, clr);
-            if (score >= best_score) {
+            if (score > best_score) {
                 best_score = score;
                 this->best_move = m;
-                best_moves.insert(m);
-            }
-        }
-        if (best_moves.size() >= 5) {
-            double best_score2 = -10000.0;
-            double alpha2 = -10000.0;
-            double beta2 = 10000.0;
-            time_t start2 = time(0);
-            for (auto m : best_moves) {
-                time_t end2 = time(0);
-                if (end2 - start2 > 0.5) break;
-                Board newboard(b);
-                newboard.do_move_(m);
-                double score = alpha_beta2(newboard, 0, true, alpha2, beta2, clr, m);
-                if (score > best_score2) {
-                    best_score2 = score;
-                    this->best_move = m;
-                }
             }
         }
     }
